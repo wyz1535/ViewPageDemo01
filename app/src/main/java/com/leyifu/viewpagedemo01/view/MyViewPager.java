@@ -1,10 +1,12 @@
 package com.leyifu.viewpagedemo01.view;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -86,11 +88,27 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
         ll_point.getChildAt(0).setEnabled(false);
     }
 
+    private Handler handler = new Handler();
+    private boolean isScroll = true;
     //与自定义窗体绑定的时候开始监听
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        isScroll = true;
         view_pager.addOnPageChangeListener(this);
+        //自动播放第一张图片
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (isScroll){
+                    Log.e(TAG, "run: 我正在自动滚动" );
+                    view_pager.setCurrentItem(view_pager.getCurrentItem()+1);
+
+                    //自动播放后面的图片
+                    handler.postDelayed(this, 3000);
+                }
+            }
+        },3000);
     }
 
     //与自定义窗体解除绑定的时候移除监听
@@ -98,6 +116,7 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         view_pager.removeOnPageChangeListener(this);
+        isScroll=false;
     }
 
     //页面滚动的时候
@@ -118,15 +137,9 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
             modifyPosition = 1;
         }
 
-        if (position == 0) {
-            tv_title.setText(titles[2]);
-        } else if (position == imageViews.size() - 1) {
-            tv_title.setText(titles[0]);
-        } else {
-            tv_title.setText(titles[position - 1]);
-        }
 //        让当前点变红 上一次点变白
         if (prePosition != modifyPosition) {
+            tv_title.setText(titles[modifyPosition - 1]);
             ll_point.getChildAt(modifyPosition - 1).setEnabled(false);
             ll_point.getChildAt(prePosition - 1).setEnabled(true);
             prePosition = modifyPosition;
@@ -136,10 +149,12 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
     //页面滚动状态发生改变的时候
     @Override
     public void onPageScrollStateChanged(int state) {
-        Log.e(TAG, "onPageScrollStateChanged:3333");
-        if (this.position == 0 || this.position == imageViews.size() - 1) {
-            //当为flase时 从第一张跳到最后一张不会有弹动的页面  为true时 会显示弹动的页面
-            view_pager.setCurrentItem(modifyPosition, false);
+        if (state == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+            Log.e(TAG, "onPageScrollStateChanged:3333");
+            if (this.position == 0 || this.position == imageViews.size() - 1) {
+                //当为flase时 从第一张跳到最后一张不会有弹动的页面  为true时 会显示弹动的页面
+                view_pager.setCurrentItem(modifyPosition, false);
+            }
         }
     }
 
