@@ -1,6 +1,8 @@
 package com.leyifu.viewpagedemo01.view;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
@@ -36,6 +38,7 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
     private int modifyPosition;
     private int position;
     private int prePosition = 1;
+    private View child;
 
     public MyViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -53,9 +56,11 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
         ll_point = ((LinearLayout) view.findViewById(R.id.ll_point));
     }
 
-    public void setDatas(int[] ivs, String[] titles) {
+    public void setDatas(int[] ivs, String[] titles, final String[] url) {
         this.titles = titles;
         imageViews = new ArrayList<>();
+
+        ll_point.removeView(child);
         for (int i = 0; i < ivs.length + 2; i++) {
             ImageView imageView = new ImageView(getContext());
             if (i == 0) {
@@ -66,7 +71,7 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
                 imageView.setImageResource(ivs[i - 1]);
 
                 //添加点
-                View child = new View(getContext());
+                child = new View(getContext());
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(20, 20);
                 params.rightMargin = 10;
                 child.setLayoutParams(params);
@@ -75,10 +80,17 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
                 child.setOnClickListener(this);
                 child.setTag(i);
 
-                ll_point.addView(child);
-
+                    ll_point.addView(child);
             }
             imageViews.add(imageView);
+            final int finalI = i;
+            imageViews.get(i).setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+//                    Toast.makeText(getContext(), url[finalI - 1], Toast.LENGTH_SHORT).show();
+                    getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url[finalI - 1])));
+                }
+            });
         }
 
         view_pager.setAdapter(new MyAdapter(getContext(), imageViews, titles));
@@ -90,6 +102,7 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
 
     private Handler handler = new Handler();
     private boolean isScroll = true;
+
     //与自定义窗体绑定的时候开始监听
     @Override
     protected void onAttachedToWindow() {
@@ -100,15 +113,15 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (isScroll){
-                    Log.e(TAG, "run: 我正在自动滚动" );
-                    view_pager.setCurrentItem(view_pager.getCurrentItem()+1);
+                if (isScroll) {
+                    Log.e(TAG, "run: 我正在自动滚动");
+                    view_pager.setCurrentItem(view_pager.getCurrentItem() + 1);
 
                     //自动播放后面的图片
                     handler.postDelayed(this, 3000);
                 }
             }
-        },3000);
+        }, 3000);
     }
 
     //与自定义窗体解除绑定的时候移除监听
@@ -116,7 +129,7 @@ public class MyViewPager extends LinearLayout implements ViewPager.OnPageChangeL
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         view_pager.removeOnPageChangeListener(this);
-        isScroll=false;
+        isScroll = false;
     }
 
     //页面滚动的时候
